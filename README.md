@@ -257,3 +257,7 @@ setup/run.sh day-05/cleanup.sh
 `day-19/cleanup.sh --all` also deletes the `course` cluster, and `day-25/teardown.sh` deletes the `eks` cluster. `day-07/cleanup.sh --all` also removes the registry's data volume and its password files.
 
 To remove everything the course created on the server, run the cleanups from day 25 back to day 2. Docker images are kept, so a re-run does not download them again; `docker image prune` frees that space. Leaving Docker Swarm (`docker swarm leave --force`) is left to you, because days 17 and 18 only leave it when nothing else uses it.
+
+## License
+
+The scripts, manifests and notes in this repository are released under the [MIT License](LICENSE). The course slides are not part of this repository and are not covered by it.

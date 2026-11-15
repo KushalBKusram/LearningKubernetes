@@ -1,0 +1,55 @@
+# The database and its Service in ONE file (slides 454, 456). "---" separates the two objects.
+# A single "kubectl apply -f mariadb.yaml" creates both, and one edit updates both.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb-statefulset
+  labels:
+    app: mariadb
+spec:
+  serviceName: mariadb-service # now the Service below exists
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom: { secretKeyRef: { name: my-mariadb-secret, key: password } }
+            - name: MARIADB_USER
+              valueFrom: { secretKeyRef: { name: my-mariadb-secret, key: username } }
+            - name: MARIADB_PASSWORD
+              valueFrom: { secretKeyRef: { name: my-mariadb-secret, key: password } }
+            - name: MARIADB_DATABASE
+              value: wordpress
+          ports:
+            - name: mysql # a named port (slide 467)
+              containerPort: 3306
+          readinessProbe: # ready only once MariaDB accepts connections; the first start takes a few seconds
+            tcpSocket:
+              port: mysql
+            periodSeconds: 3
+          resources:
+            requests: { cpu: 25m, memory: 64Mi }
+            limits: { memory: 512Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-service
+  labels:
+    app: mariadb
+spec: # no "type": the default is ClusterIP, reachable only inside the cluster (slide 460)
+  ports:
+    - port: 3306
+      protocol: TCP
+  selector:
+    app: mariadb # the Service sends traffic to every pod with this label

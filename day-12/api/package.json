@@ -1,0 +1,10 @@
+{
+  "name": "day12-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A tiny notes API for the day 12 full-stack deployment",
+  "main": "server.js",
+  "dependencies": {
+    "mongodb": "^6.0.0"
+  }
+}

@@ -1,0 +1,18 @@
+# A Job (slide 391): runs a task a set number of times, then it is finished.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: day20-job
+spec:
+  completions: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: ubuntu
+          image: ubuntu
+          command: ["sh", "-c", "echo run finished on $(hostname)"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi

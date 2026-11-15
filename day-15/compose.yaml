@@ -1,0 +1,55 @@
+# WordPress + MariaDB (slides 302-315).
+# Passwords and names come from the .env file next to this one (slide 313);
+# lab.sh generates it. Nothing secret is written in this file.
+name: day15
+
+services:
+  db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?set DB_ROOT_PASSWORD in .env}
+      MARIADB_DATABASE: ${DB_NAME:-wordpress}
+      MARIADB_USER: ${DB_USER:-wordpress}
+      MARIADB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck: # slide 315: a container is only "healthy" once the database really answers
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  wordpress:
+    image: wordpress:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy # WordPress starts only after the db healthcheck passes
+    ports:
+      - "${WP_PORT:-8325}:80" # no whitespace around the colon (slide 309)
+    environment:
+      WORDPRESS_DB_HOST: db # the service name is the host name on the compose network
+      WORDPRESS_DB_NAME: ${DB_NAME:-wordpress}
+      WORDPRESS_DB_USER: ${DB_USER:-wordpress}
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    volumes:
+      - wp-data:/var/www/html
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/80'"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+# Volumes used above must also be listed here (slide 309).
+volumes:
+  db-data:
+    name: day15-db-data
+  wp-data:
+    name: day15-wp-data
+
+networks:
+  default:
+    name: day15-net

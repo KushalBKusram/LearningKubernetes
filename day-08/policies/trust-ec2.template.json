@@ -1,0 +1,14 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "TheEc2ServiceMayAssumeTheRole",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com",
+        "AWS": "__CALLER_ARN__"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+# SFTP only, key login only, one user, locked into /srv/sftp.
+Port 22
+HostKey /etc/ssh/ssh_host_ed25519_key
+
+PermitRootLogin no
+AllowUsers upload
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+AuthorizedKeysFile /etc/ssh/authorized_keys/%u
+UsePAM no
+
+# No shell, no forwarding: the connection can only transfer files.
+Subsystem sftp internal-sftp
+ForceCommand internal-sftp -d /site
+ChrootDirectory /srv/sftp
+AllowTcpForwarding no
+X11Forwarding no

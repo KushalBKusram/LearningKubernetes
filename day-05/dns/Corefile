@@ -1,0 +1,8 @@
+# CoreDNS configuration: an authoritative name server for one practice zone.
+# It plays the part of a Route 53 hosted zone (slide 128).
+# Port 1053 is used inside the container so it needs no special privileges.
+course.test:1053 {
+    file /zones/course.test.zone
+    log
+    errors
+}

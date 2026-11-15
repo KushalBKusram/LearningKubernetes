@@ -1,0 +1,30 @@
+# MariaDB with an environment variable (slide 407). The password sits in plain text in this file,
+# which is why the next step moves it into a Secret.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb-env
+  labels:
+    app: mariadb-env
+spec:
+  serviceName: mariadb-env
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb-env
+  template:
+    metadata:
+      labels:
+        app: mariadb-env
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              value: "password"
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi

@@ -1,0 +1,82 @@
+# Slides 539, 548: the database on block storage. On EKS this is an EBS volume;
+# here it is the cluster's default StorageClass "standard" (local-path), whose volumes
+# are ReadWriteOnce and live on one node, like an EBS volume lives in one zone.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql
+type: Opaque
+stringData:
+  root-password: root-password-for-the-lab
+  database: wordpress
+  user: wordpress
+  password: wordpress-password-for-the-lab
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  clusterIP: None
+  selector:
+    app: mysql
+  ports:
+    - port: 3306
+      name: mysql
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+spec:
+  serviceName: mysql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      # Slide 544: the easy answer to "EBS lives in one zone" is to keep everything that
+      # needs the volume in that zone. This StatefulSet is pinned to eu-west-3a.
+      nodeSelector:
+        topology.kubernetes.io/zone: eu-west-3a
+      containers:
+        - name: mysql
+          image: mysql:8.4
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom: {secretKeyRef: {name: mysql, key: root-password}}
+            - name: MYSQL_DATABASE
+              valueFrom: {secretKeyRef: {name: mysql, key: database}}
+            - name: MYSQL_USER
+              valueFrom: {secretKeyRef: {name: mysql, key: user}}
+            - name: MYSQL_PASSWORD
+              valueFrom: {secretKeyRef: {name: mysql, key: password}}
+          ports:
+            - containerPort: 3306
+              name: mysql
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$MYSQL_ROOT_PASSWORD\""]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 4
+          resources:
+            requests: {cpu: 100m, memory: 400Mi}
+          volumeMounts:
+            - {name: data, mountPath: /var/lib/mysql}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 1Gi

@@ -1,0 +1,38 @@
+# The stand-in for what `eksctl create cluster --region eu-west-3` builds (slide 505).
+# kind runs each Kubernetes node as a Docker container on the server.
+#
+#   kind create cluster --config cluster.yaml
+#
+# extraPortMappings publish a node port on the server itself. They play the role
+# of the nodes' public IPs plus the security-group rules that open a port (slide 508):
+# without a mapping, a NodePort is only reachable from the server.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: eks
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30180 # ingress controller, HTTP
+        hostPort: 8480
+      - containerPort: 30443 # ingress controller, HTTPS
+        hostPort: 8443
+      - containerPort: 30081 # WordPress (day 25)
+        hostPort: 8450
+
+  # Worker node #1, in "availability zone" eu-west-3a.
+  - role: worker
+    labels:
+      topology.kubernetes.io/region: eu-west-3
+      topology.kubernetes.io/zone: eu-west-3a
+    extraPortMappings:
+      - containerPort: 30080 # NodePort service of nginx, on node #1
+        hostPort: 8430
+
+  # Worker node #2, in "availability zone" eu-west-3b.
+  - role: worker
+    labels:
+      topology.kubernetes.io/region: eu-west-3
+      topology.kubernetes.io/zone: eu-west-3b
+    extraPortMappings:
+      - containerPort: 30080 # the same NodePort service, on node #2
+        hostPort: 8431

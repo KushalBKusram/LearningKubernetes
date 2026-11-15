@@ -1,0 +1,15 @@
+# A PersistentVolume (slides 482-483): a place for storing data that the cluster may use.
+# PersistentVolumes belong to the whole cluster, not to a namespace, hence the day23- prefix.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: day23-local-pv
+spec:
+  capacity:
+    storage: 1Gi # the slides use 10Gi; a hostPath volume has no real limit, so the number is only a label for matching
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: hostpath
+  hostPath:
+    path: /mnt/day23-pv
+    type: DirectoryOrCreate

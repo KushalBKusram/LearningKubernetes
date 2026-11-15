@@ -1,0 +1,45 @@
+# The same image with the three imagePullPolicy values (slide 414). Three pods in one file.
+# day21-app:1.0 exists only on the node, so a policy that pulls (Always) cannot find it.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pull-ifnotpresent
+spec:
+  containers:
+    - name: app
+      image: day21-app:1.0
+      imagePullPolicy: IfNotPresent
+      resources: { requests: { cpu: 10m, memory: 16Mi } }
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pull-never
+spec:
+  containers:
+    - name: app
+      image: day21-app:1.0
+      imagePullPolicy: Never
+      resources: { requests: { cpu: 10m, memory: 16Mi } }
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pull-always
+spec:
+  containers:
+    - name: app
+      image: day21-app:1.0
+      imagePullPolicy: Always
+      resources: { requests: { cpu: 10m, memory: 16Mi } }
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pull-never-missing
+spec:
+  containers:
+    - name: app
+      image: day21-app:does-not-exist
+      imagePullPolicy: Never
+      resources: { requests: { cpu: 10m, memory: 16Mi } }

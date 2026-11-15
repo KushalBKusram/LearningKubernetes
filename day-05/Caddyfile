@@ -1,0 +1,12 @@
+# Caddy configuration (slide 132).
+# {$DOMAIN} is filled in from the container's DOMAIN environment variable.
+#
+# Giving Caddy a domain name is all it takes to switch on HTTPS and the
+# redirect from HTTP. On the slides the certificate comes from a public
+# certificate authority, which needs a server reachable from the internet.
+# "tls internal" makes Caddy act as its own certificate authority instead.
+{$DOMAIN} {
+	tls internal
+	root * /srv
+	file_server
+}

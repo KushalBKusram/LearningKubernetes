@@ -1,0 +1,19 @@
+{
+  "name": "course-ts-app",
+  "version": "2.0.0",
+  "description": "TypeScript version of the course app: it needs a compile step",
+  "private": true,
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}

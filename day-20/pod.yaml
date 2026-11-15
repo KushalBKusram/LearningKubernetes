@@ -1,0 +1,25 @@
+# A pod written as YAML (slides 386-387).
+#   kubectl apply -f pod.yaml
+#
+# The four top-level properties from slide 387:
+#   apiVersion  the version of the Kubernetes API; a Pod is always in v1
+#   kind        what to create
+#   metadata    a name, and labels to find it again
+#   spec        the desired state
+# A fifth, "status", is not written by us: the cluster fills it in, and it shows
+# up when you ask for the object back with `kubectl get pod day20-pod -o yaml`.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: day20-pod
+  labels:
+    app: day20-demo
+spec:
+  containers:
+    - name: ubuntu
+      image: ubuntu
+      command: ["sleep", "infinity"]
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi

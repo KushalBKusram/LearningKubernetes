@@ -1,0 +1,25 @@
+# Access modes (slide 493): this storage class cannot do ReadWriteMany, so the claim cannot be provisioned.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-rwx
+spec:
+  accessModes: [ReadWriteMany]
+  resources: { requests: { storage: 1Gi } }
+  storageClassName: standard
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rwx-pod
+spec:
+  containers:
+    - name: ubuntu
+      image: ubuntu
+      command: ["sleep", "infinity"]
+      volumeMounts:
+        - { mountPath: /data, name: data }
+      resources: { requests: { cpu: 10m, memory: 16Mi } }
+  volumes:
+    - name: data
+      persistentVolumeClaim: { claimName: pvc-rwx }

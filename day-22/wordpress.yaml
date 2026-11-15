@@ -1,0 +1,73 @@
+# WordPress and its two Services in one file (slides 456, 463, 465, 467).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-deployment
+  labels:
+    app: wordpress
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+        - name: wordpress
+          image: wordpress:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: WORDPRESS_DB_HOST
+              value: mariadb-service # the Service's name, resolved by the cluster's DNS (slide 458)
+            - name: WORDPRESS_DB_NAME
+              value: wordpress
+            - name: WORDPRESS_DB_USER
+              valueFrom: { secretKeyRef: { name: my-mariadb-secret, key: username } }
+            - name: WORDPRESS_DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: my-mariadb-secret, key: password } }
+          ports:
+            - name: http # a named port (slide 467)
+              containerPort: 80
+          readinessProbe: # a pod only receives traffic from a Service once it is ready
+            tcpSocket:
+              port: http
+            periodSeconds: 3
+          resources:
+            requests: { cpu: 25m, memory: 64Mi }
+            limits: { memory: 256Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-service
+  labels:
+    app: wordpress
+spec:
+  type: NodePort
+  ports:
+    - port: 80 # the Service's own port, inside the cluster: http://wordpress-service
+      targetPort: http # the port on the pods; here by name, which is the pods' port 80
+      nodePort: 30080 # the port opened on the node, for the outside
+      protocol: TCP
+  selector:
+    app: wordpress
+---
+# The same pods behind a second Service whose three ports are all different,
+# to make clear which number does what (slide 465).
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-ports
+  labels:
+    app: wordpress
+spec:
+  type: NodePort
+  ports:
+    - port: 8080 # inside the cluster: http://wordpress-ports:8080
+      targetPort: 80 # the pods' port (here by number)
+      nodePort: 30081 # outside: node port 30081
+  selector:
+    app: wordpress

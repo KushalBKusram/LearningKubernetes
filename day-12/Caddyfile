@@ -1,0 +1,25 @@
+# The CloudFront stand-in (slides 260-262): one address, two origins.
+#   /api/*      -> the Node.js backend (App Runner on the slides)
+#   everything  -> the bucket (S3 on the slides)
+:80 {
+	encode gzip
+
+	handle /api/* {
+		reverse_proxy day12-api:3000
+	}
+
+	handle {
+		# A path that ends in / is an index page, like S3 website hosting.
+		@dir path */
+		rewrite @dir /day12-site{path}index.html
+		@file not path */
+		rewrite @file /day12-site{path}
+
+		header Cache-Control "public, max-age=300"
+		header X-Served-By "caddy (day 12 cdn stand-in)"
+
+		reverse_proxy day12-moto:5000 {
+			header_up Host {upstream_hostport}
+		}
+	}
+}

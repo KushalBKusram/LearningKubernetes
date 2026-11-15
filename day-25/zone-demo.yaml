@@ -1,0 +1,21 @@
+# Slides 542-546: what a zone-bound volume does to a pod.
+# This pod asks for the database's volume (claim data-mysql-0) but is told to run in
+# zone eu-west-3b, while the volume sits on a node in eu-west-3a. It cannot be
+# scheduled and stays Pending. Applying it is the demonstration; lab.sh deletes it again.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: zone-demo
+spec:
+  nodeSelector:
+    topology.kubernetes.io/zone: eu-west-3b
+  containers:
+    - name: demo
+      image: nginx:latest
+      imagePullPolicy: IfNotPresent
+      volumeMounts:
+        - {name: data, mountPath: /data}
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: data-mysql-0

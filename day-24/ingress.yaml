@@ -1,0 +1,39 @@
+# Slides 519-525: an Ingress, with HTTPS. The F5 NGINX Ingress Controller watches this
+# and configures its nginx. On EKS the AWS Load Balancer Controller would create an
+# ALB from the same kind of object, with an ACM certificate ARN in an annotation (slide 525).
+# Here the certificate is a self-signed one in the Secret nginx-eks-tls (made by lab.sh).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-ingress
+  labels:
+    app: nginx-ingress
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - nginx.eks.local
+        - hello.eks.local
+      secretName: nginx-eks-tls
+  rules:
+    - host: nginx.eks.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx
+                port:
+                  number: 80
+    # The slides' optional custom image (slide 533).
+    - host: hello.eks.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hello
+                port:
+                  number: 80

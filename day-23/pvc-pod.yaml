@@ -1,0 +1,18 @@
+# A pod that uses the claim (slide 489): a volume of type persistentVolumeClaim, mounted into the container.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pvc-pod
+spec:
+  containers:
+    - name: ubuntu
+      image: ubuntu
+      command: ["sleep", "infinity"]
+      volumeMounts:
+        - mountPath: /data
+          name: app-volume
+      resources: { requests: { cpu: 10m, memory: 16Mi } }
+  volumes:
+    - name: app-volume
+      persistentVolumeClaim:
+        claimName: local-pvc

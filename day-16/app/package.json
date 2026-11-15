@@ -1,0 +1,10 @@
+{
+  "name": "day16-bad-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A deliberately unreliable web app for practising load balancing and health checks",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

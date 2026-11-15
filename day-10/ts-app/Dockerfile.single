@@ -1,0 +1,10 @@
+# Single stage: everything needed to compile stays in the final image (slide 226).
+FROM node:26
+WORKDIR /app
+COPY package.json package-lock.json ./
+# "npm ci" without --omit=dev: the compiler is a development dependency.
+RUN npm ci
+COPY . .
+RUN npx tsc
+EXPOSE 3000
+CMD ["node", "dist/server.js"]

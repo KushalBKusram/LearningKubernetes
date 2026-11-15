@@ -1,0 +1,13 @@
+# A PersistentVolumeClaim (slides 485-487): a request for storage of a given size, class and access mode.
+# Kubernetes looks for a free PersistentVolume that fits.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: local-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: hostpath

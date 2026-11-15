@@ -1,0 +1,38 @@
+# Slide 533: a custom image. Built by lab.sh from image/Dockerfile and copied into the
+# nodes with `kind load docker-image` (on EKS it would come from ECR).
+# imagePullPolicy: Never proves the nodes use the loaded image and do not pull anything.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello
+  labels:
+    app: hello
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hello
+  template:
+    metadata:
+      labels:
+        app: hello
+    spec:
+      containers:
+        - name: hello
+          image: day24-hello:1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 80
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello
+spec:
+  selector:
+    app: hello
+  ports:
+    - port: 80
+      targetPort: 80

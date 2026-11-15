@@ -1,0 +1,45 @@
+# The day 21 app, built from app/Dockerfile (slides 407, 410, 413-414):
+#   - a plain environment variable (APP_GREETING)
+#   - two values from the Secret (DB_USER, DB_PASSWORD)
+#   - our own image, which is on no registry: the node has it, so imagePullPolicy must not be Always
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: day21-app
+  labels:
+    app: day21-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: day21-app
+  template:
+    metadata:
+      labels:
+        app: day21-app
+    spec:
+      containers:
+        - name: app
+          image: day21-app:1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: APP_VERSION
+              value: "1.0"
+            - name: APP_GREETING
+              value: "hello from a Deployment"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: my-mariadb-secret
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: my-mariadb-secret
+                  key: password
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi

@@ -1,0 +1,27 @@
+# A ReplicaSet (slide 393): keeps a given number of copies of a pod running.
+# It is used here only to show what it does. A Deployment (deployment.yaml)
+# manages ReplicaSets like this one for us.
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: day20-replicaset
+  labels:
+    app: day20-rs
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: day20-rs
+  template:
+    metadata:
+      labels:
+        app: day20-rs
+    spec:
+      containers:
+        - name: ubuntu
+          image: ubuntu
+          command: ["sleep", "infinity"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi

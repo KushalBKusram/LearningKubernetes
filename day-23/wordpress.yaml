@@ -1,0 +1,74 @@
+# WordPress whose files live on one PersistentVolumeClaim that all replicas share (slide 469).
+# ReadWriteOnce means "one NODE at a time", and this cluster has one node, so both pods can use it.
+# On a cluster with several nodes this would need ReadWriteMany (EFS on AWS); see slide 494.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wordpress-data
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-deployment
+  labels:
+    app: wordpress
+spec:
+  replicas: 1 # the lab scales to 2 once the first pod has put WordPress's files on the volume
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+        - name: wordpress
+          image: wordpress:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: WORDPRESS_DB_HOST
+              value: mariadb-service
+            - name: WORDPRESS_DB_NAME
+              value: wordpress
+            - name: WORDPRESS_DB_USER
+              valueFrom: { secretKeyRef: { name: my-mariadb-secret, key: username } }
+            - name: WORDPRESS_DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: my-mariadb-secret, key: password } }
+          ports:
+            - name: http
+              containerPort: 80
+          readinessProbe:
+            tcpSocket: { port: http }
+            periodSeconds: 3
+          volumeMounts:
+            - name: wordpress-files
+              mountPath: /var/www/html
+          resources:
+            requests: { cpu: 25m, memory: 64Mi }
+            limits: { memory: 256Mi }
+      volumes:
+        - name: wordpress-files
+          persistentVolumeClaim:
+            claimName: wordpress-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-service
+  labels:
+    app: wordpress
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: http
+      nodePort: 30082 # 30080 and 30081 belong to day 22
+  selector:
+    app: wordpress

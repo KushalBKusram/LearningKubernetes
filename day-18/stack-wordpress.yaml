@@ -1,0 +1,31 @@
+# Project 2 (slides 330, 353): WordPress. Added to the same stack:
+#
+#   docker stack deploy -c stack.yaml -c stack-wordpress.yaml day18
+#
+# The database is deliberately NOT a service in this stack. Like Amazon RDS on
+# the slides, it lives outside the cluster (the container day18-rds) and is
+# reached over the network by name.
+
+services:
+  wordpress:
+    image: wordpress:latest
+    environment:
+      WORDPRESS_DB_HOST: day18-rds
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      # WordPress stores its code, plugins and uploads here. Shared, so that
+      # every task serves the same site.
+      - wp-efs:/var/www/html
+    deploy:
+      # One task for the first start, which fills the empty volume. lab.sh
+      # scales it to 2 once the site is installed.
+      replicas: 1
+      restart_policy:
+        condition: any
+
+volumes:
+  wp-efs:
+    external: true
+    name: day18-wp-efs

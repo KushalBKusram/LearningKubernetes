@@ -1,0 +1,27 @@
+# The stand-in for an ECS task definition plus an ECS service (slides 333, 337).
+#
+#   what to run          -> image, ports, healthcheck        (task definition)
+#   how many, and how
+#   to replace them      -> deploy                           (service)
+#
+# Deploy with:  docker stack deploy -c stack.yaml day17
+
+services:
+  web:
+    image: day17-app:v1
+    ports:
+      - "8500:80"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost/health.php"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 3s
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: any
+      update_config:
+        parallelism: 1      # replace one task at a time
+        order: start-first  # start the new task before stopping the old one
+        delay: 1s

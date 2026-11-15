@@ -1,0 +1,16 @@
+# Files in the build context that must not end up in the image (slide 153).
+
+# Dependencies are installed inside the image by "npm ci", never copied from the host.
+node_modules/
+
+# Local secrets and settings.
+.env
+
+# Version control and editor leftovers, in any subdirectory.
+.git/
+**/.DS_Store
+
+# Documentation and the build recipe itself are not needed at run time.
+*.md
+Dockerfile*
+.dockerignore

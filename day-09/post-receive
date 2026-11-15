@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Build hook for the bare repository that stands in for GitHub.
+#
+# Git runs this after every push. It is the local version of slide 215's idea:
+# a change arrives in the repository, and an image is built and published
+# without anyone doing it by hand. For every push to "main" it:
+#
+#   1. exports that exact commit,
+#   2. builds the image and tags it with the commit hash,
+#   3. pushes it to the private registry (the ECR stand-in from day 7),
+#   4. replaces the running container with the new image
+#      (what App Runner's automatic deployment does on slide 211).
+#
+# Pushes to any other branch are ignored.
+set -euo pipefail
+
+REG=${COURSE_REGISTRY:-localhost:5000}
+REG_USER=${COURSE_REGISTRY_USER:-courselab}
+PW_FILE=${COURSE_REGISTRY_PASSWORD_FILE:-$HOME/.course/registry-password}
+IMAGE=$REG/day09-app
+CONTAINER=day09-app
+HOST_PORT=8109
+
+while read -r old new ref; do
+  if [ "$ref" != "refs/heads/main" ]; then
+    echo "[build] $ref is not main: nothing to build"
+    continue
+  fi
+
+  short=$(git rev-parse --short=7 "$new")
+  src=$(mktemp -d)
+  cfg=$(mktemp -d)
+  # Everything below uses this one commit, not whatever is checked out anywhere.
+  git archive "$new" | tar -x -C "$src"
+
+  echo "[build] main is now $short: building $IMAGE:$short"
+  docker build -q --build-arg "COMMIT=$short" -t "$IMAGE:$short" -t "$IMAGE:latest" "$src" >/dev/null
+
+  # A separate Docker config directory: the build logs in with its own
+  # credentials, as a build service would, and touches nobody's login.
+  echo "[build] pushing to $REG"
+  DOCKER_CONFIG=$cfg docker login "$REG" -u "$REG_USER" --password-stdin <"$PW_FILE" >/dev/null 2>&1
+  DOCKER_CONFIG=$cfg docker push -q "$IMAGE:$short" >/dev/null
+  DOCKER_CONFIG=$cfg docker push -q "$IMAGE:latest" >/dev/null
+
+  echo "[build] deploying $short as container $CONTAINER on port $HOST_PORT"
+  docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+  docker run -d --name "$CONTAINER" -p "$HOST_PORT:3000" --restart unless-stopped "$IMAGE:$short" >/dev/null
+  for _ in $(seq 1 20); do
+    curl -fs -m 2 "http://localhost:$HOST_PORT/health" >/dev/null 2>&1 && break
+    sleep 0.5
+  done
+  echo "[build] done: http://localhost:$HOST_PORT reports commit $(curl -s -m 2 "http://localhost:$HOST_PORT/api/info" | jq -r .commit)"
+
+  rm -rf "$src" "$cfg"
+done

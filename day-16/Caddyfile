@@ -1,0 +1,47 @@
+# Caddy as reverse proxy and load balancer in front of three app instances (slides 317-324).
+{
+	# Certificates for the HTTPS site below come from Caddy's own certificate authority.
+	local_certs
+	auto_https disable_redirects
+}
+
+(balance) {
+	reverse_proxy day16-app-1:3000 day16-app-2:3000 day16-app-3:3000 {
+		lb_policy round_robin
+
+		# Crash: a refused connection makes Caddy try another instance for up to 5 seconds.
+		lb_try_duration 5s
+		lb_try_interval 250ms
+
+		# Freeze: an instance that does not answer within 2 seconds counts as failed and the
+		# request is retried on another instance (GET requests only).
+		transport http {
+			response_header_timeout 2s
+			# No connection reuse: a pooled connection to a frozen process that has since been
+			# restarted would otherwise keep the new instance out of rotation for ~30 seconds.
+			keepalive off
+		}
+		lb_retry_match {
+			method GET
+		}
+
+		# Ask every instance for /health every 2 seconds and stop sending traffic to a bad one.
+		health_uri /health
+		health_interval 2s
+		health_timeout 1s
+		health_status 200
+	}
+}
+
+# Plain HTTP, published on host port 8316.
+:80 {
+	import balance
+}
+
+# HTTPS, published on host port 8317. The name must match what the client asks for.
+# Not a *.ts.net name: Caddy would hand those to Tailscale's certificate service, which
+# is not reachable from inside this container, and "tls internal" would not be used.
+day16.test {
+	tls internal
+	import balance
+}

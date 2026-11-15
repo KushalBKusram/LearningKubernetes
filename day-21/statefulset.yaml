@@ -1,0 +1,50 @@
+# MariaDB as a StatefulSet, with its credentials taken from a Secret (slides 405, 407, 409-410).
+# There is no storage yet, so the data is lost when the pod is replaced. Day 23 adds it.
+# "serviceName" names the Service that gives the pods stable network names; day 22 creates it.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb-statefulset
+  labels:
+    app: mariadb
+spec:
+  serviceName: mariadb-service
+  replicas: 1 # MariaDB is not set up as a cluster, so more replicas would be unrelated databases (slide 446)
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:latest
+          imagePullPolicy: IfNotPresent # for ":latest" the default is Always (slide 414)
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: my-mariadb-secret
+                  key: password
+            - name: MARIADB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: my-mariadb-secret
+                  key: username
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: my-mariadb-secret
+                  key: password
+            - name: MARIADB_DATABASE
+              value: wordpress
+          ports:
+            - containerPort: 3306
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 512Mi

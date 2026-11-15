@@ -1,0 +1,46 @@
+# --- Course material: not part of this repository ---
+slides.pdf
+*.pdf
+
+# --- Your own settings (copy setup/local.env.example) ---
+setup/local.env
+
+# --- Generated at run time: passwords, keys, certificates, tokens ---
+# The labs write these into a .work/ folder on the server, and day 5 and day 18 can copy
+# a certificate back to your computer. None of it belongs in a repository.
+.work/
+.env
+.env.*
+!.env.example
+*.env
+!*.env.example
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+*.jks
+id_rsa*
+id_ed25519*
+*.kubeconfig
+kubeconfig*
+htpasswd
+
+# --- Tool and editor files ---
+.DS_Store
+.claude/
+.idea/
+.vscode/
+*.swp
+
+# --- Language tooling and scratch ---
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.log
+*.tmp
+tmp/
+scratch/

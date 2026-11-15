@@ -1,0 +1,17 @@
+# An ephemeral volume: emptyDir (slide 475). It lives exactly as long as the pod.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: emptydir-pod
+spec:
+  containers:
+    - name: ubuntu
+      image: ubuntu
+      command: ["sleep", "infinity"]
+      volumeMounts:
+        - mountPath: /app
+          name: app-volume
+      resources: { requests: { cpu: 10m, memory: 16Mi } }
+  volumes:
+    - name: app-volume
+      emptyDir: {}

@@ -1,0 +1,29 @@
+; Zone file for the practice domain course.test (slide 126: record types).
+; lab.sh replaces @SERVER_IP4@ and @SERVER_IP6@ with the server's addresses.
+$ORIGIN course.test.
+$TTL 300
+
+@       IN SOA  ns1.course.test. admin.course.test. (
+                2026111401 ; serial
+                3600       ; refresh
+                600        ; retry
+                86400      ; expire
+                300 )      ; negative-answer TTL
+
+; NS: the authoritative name servers for this domain
+@       IN NS    ns1.course.test.
+ns1     IN A     @SERVER_IP4@
+
+; A / AAAA: the domain points at our server (what slide 128 sets up in Route 53)
+@       IN A     @SERVER_IP4@
+@       IN AAAA  @SERVER_IP6@
+
+; CNAME: www is an alias for the bare domain
+www     IN CNAME course.test.
+
+; MX: where mail for the domain goes
+@       IN MX    10 mail.course.test.
+mail    IN A     @SERVER_IP4@
+
+; TXT: free-form text, here a mail policy
+@       IN TXT   "v=spf1 mx -all"

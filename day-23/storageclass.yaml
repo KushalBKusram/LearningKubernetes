@@ -1,0 +1,12 @@
+# A StorageClass (slide 480): a named kind of storage. This one is for volumes that an
+# administrator creates by hand (PersistentVolumes), so there is nothing to provision.
+# The slides use the class "hostpath" that Docker Desktop ships with; kind does not have it.
+#
+# WaitForFirstConsumer: a PVC stays Pending until a pod uses it, so Kubernetes knows which node.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: hostpath
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain

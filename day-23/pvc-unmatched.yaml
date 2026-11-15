@@ -1,0 +1,39 @@
+# Two claims that cannot be satisfied (slide 486):
+#  - class "efs-sc": no PersistentVolume has that class
+#  - class "hostpath": a PersistentVolume can only be used by a single claim, and local-pvc has it already
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-wrong-class
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: { requests: { storage: 1Gi } }
+  storageClassName: efs-sc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-second
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: { requests: { storage: 1Gi } }
+  storageClassName: hostpath
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pvc-pending-pod # a pod that uses the claims, so that the cluster tries to bind them
+spec:
+  containers:
+    - name: ubuntu
+      image: ubuntu
+      command: ["sleep", "infinity"]
+      volumeMounts:
+        - { mountPath: /a, name: a }
+        - { mountPath: /b, name: b }
+      resources: { requests: { cpu: 10m, memory: 16Mi } }
+  volumes:
+    - name: a
+      persistentVolumeClaim: { claimName: pvc-wrong-class }
+    - name: b
+      persistentVolumeClaim: { claimName: pvc-second }

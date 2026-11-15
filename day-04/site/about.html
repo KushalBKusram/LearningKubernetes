@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Day 04: how this page got here</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>How this page got here</h1>
+    <ol>
+      <li>Written on the Mac, in <code>day-04/site</code>.</li>
+      <li>Transferred to the server: <code>scp -r . your-server:app</code></li>
+      <li>Copied into the container: <code>docker cp ~/app/. day04-web:/usr/share/nginx/html/</code></li>
+    </ol>
+    <p><a href="index.html">Back</a></p>
+  </main>
+</body>
+</html>

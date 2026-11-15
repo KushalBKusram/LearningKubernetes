@@ -1,0 +1,23 @@
+# A DaemonSet (slide 391): one pod on every node of the cluster.
+# This cluster has one node, so it runs one pod. On a three-node cluster (day 24) it runs three.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: day20-daemonset
+spec:
+  selector:
+    matchLabels:
+      app: day20-ds
+  template:
+    metadata:
+      labels:
+        app: day20-ds
+    spec:
+      containers:
+        - name: ubuntu
+          image: ubuntu
+          command: ["sleep", "infinity"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi

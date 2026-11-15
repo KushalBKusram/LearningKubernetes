@@ -1,0 +1,20 @@
+# The volume type hostPath (slide 477): a directory of the node, mounted into the pod.
+# The data is tied to that one node. On this cluster the "node" is the Docker container course-control-plane.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-pod
+spec:
+  containers:
+    - name: ubuntu
+      image: ubuntu
+      command: ["sleep", "infinity"]
+      volumeMounts:
+        - mountPath: /app
+          name: app-volume
+      resources: { requests: { cpu: 10m, memory: 16Mi } }
+  volumes:
+    - name: app-volume
+      hostPath:
+        path: /mnt/day23-hostpath
+        type: DirectoryOrCreate

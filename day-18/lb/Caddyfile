@@ -1,0 +1,45 @@
+# The load balancer (slides 346-351).
+#
+# It terminates HTTPS, so the applications behind it only speak plain HTTP.
+# {$DOMAIN} is filled in from the DOMAIN environment variable.
+
+{
+	# The redirect from HTTP is written out below, because the ports are not 80/443.
+	auto_https disable_redirects
+}
+
+# Listener for project 1, the upload form.
+https://{$DOMAIN}:8543 {
+	tls internal
+	reverse_proxy {
+		# The "target group" (slide 347): every running task of the php service.
+		# The cluster's DNS lists them, and Caddy asks again every 5 seconds,
+		# so the list keeps itself up to date.
+		dynamic a {
+			name tasks.day18_php
+			port 80
+			refresh 5s
+		}
+		lb_policy round_robin
+		lb_try_duration 3s
+	}
+}
+
+# Listener for project 2, WordPress.
+https://{$DOMAIN}:8544 {
+	tls internal
+	reverse_proxy {
+		dynamic a {
+			name tasks.day18_wordpress
+			port 80
+			refresh 5s
+		}
+		lb_policy round_robin
+		lb_try_duration 3s
+	}
+}
+
+# Plain HTTP is only good for one thing: sending the browser to HTTPS.
+http://{$DOMAIN}:8580 {
+	redir https://{$DOMAIN}:8543{uri} permanent
+}

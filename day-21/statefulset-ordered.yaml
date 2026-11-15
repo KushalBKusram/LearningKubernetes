@@ -1,0 +1,31 @@
+# Three pods of a StatefulSet with a small image, to show sticky names and ordering (slide 405):
+# created one after the other, ended in reverse order. (Not MariaDB: see the note in statefulset.yaml.)
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ordered
+spec:
+  serviceName: ordered
+  replicas: 3
+  podManagementPolicy: OrderedReady # the default: pod N+1 starts only when pod N is ready
+  selector:
+    matchLabels:
+      app: ordered
+  template:
+    metadata:
+      labels:
+        app: ordered
+    spec:
+      terminationGracePeriodSeconds: 1
+      containers:
+        - name: ubuntu
+          image: ubuntu
+          command: ["sleep", "infinity"]
+          readinessProbe:
+            exec:
+              command: ["true"]
+            initialDelaySeconds: 3
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi

@@ -1,0 +1,52 @@
+# Project 1 (slides 329-351): the upload form behind a load balancer.
+#
+# Deploy with:  DOMAIN=<name of this server> docker stack deploy -c stack.yaml day18
+
+services:
+  # The official PHP image, unchanged. The application is not in the image:
+  # it comes from the shared volume (slide 341).
+  php:
+    image: php:apache
+    volumes:
+      - efs:/var/www/html
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: any
+      update_config:
+        parallelism: 1
+        order: start-first
+    # No "ports": the tasks are only reachable through the load balancer.
+
+  # The load balancer. The only service with published ports.
+  lb:
+    image: day18-lb:v1
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports:
+      - "8543:8543" # HTTPS, upload form
+      - "8544:8544" # HTTPS, WordPress
+      - "8580:8580" # HTTP, redirects to 8543
+    volumes:
+      - caddy-data:/data
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
+volumes:
+  # The stand-in for EFS: one file system, mounted by every php task.
+  efs:
+    external: true
+    name: day18-efs
+  # Caddy's certificate authority and certificates.
+  caddy-data:
+    external: true
+    name: day18-caddy-data
+
+networks:
+  # The stand-in for the VPC. Created by lab.sh as an attachable overlay
+  # network, so the database container outside the stack can join it too.
+  default:
+    external: true
+    name: day18-net

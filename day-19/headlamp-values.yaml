@@ -1,0 +1,19 @@
+# Values for the Headlamp Helm chart (day 19, slides 382-384).
+
+# Publish the dashboard on the node's port 30089, which kind-cluster.yaml maps
+# to port 30089 of the server. The slides use a proxy instead.
+service:
+  type: NodePort
+  nodePort: 30089
+
+# Do not give the dashboard's own service account admin rights. The lab creates
+# a separate user and logs in with that user's token, as the slides do.
+clusterRoleBinding:
+  create: false
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 256Mi

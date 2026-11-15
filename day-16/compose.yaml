@@ -1,0 +1,53 @@
+# Three instances of a buggy Node.js app behind Caddy (slides 317-324).
+name: day16
+
+services:
+  app:
+    build: ./app
+    image: day16-bad-app
+    deploy:
+      replicas: 3 # containers day16-app-1, day16-app-2, day16-app-3
+    restart: unless-stopped # crash: the container is started again (slide 322)
+    labels:
+      autoheal: "true" # freeze: the healthcheck fails and autoheal restarts it (slide 324)
+
+  caddy:
+    image: caddy:latest
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "8316:80"
+      - "8317:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+
+  # Docker only marks a frozen container "unhealthy"; it does not restart it. This small
+  # container does, for containers of this project that carry the label autoheal=true.
+  # It needs the Docker socket, which gives it full control of Docker on this machine,
+  # so it is limited to a few lines you can read here.
+  autoheal:
+    image: docker:cli
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "autoheal watching label autoheal=true in project day16"
+        while true; do
+          for id in $$(docker ps -q --filter health=unhealthy --filter label=autoheal=true --filter label=com.docker.compose.project=day16); do
+            echo "restarting unhealthy container $$(docker inspect -f '{{.Name}}' $$id)"
+            docker restart $$id >/dev/null
+          done
+          sleep 2
+        done
+
+volumes:
+  caddy-data:
+    name: day16-caddy-data
+
+networks:
+  default:
+    name: day16-net
